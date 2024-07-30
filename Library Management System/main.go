@@ -1,7 +1,7 @@
 package main
 
 import (
-    "example/LibraryManagmnetSystem/controllers"
+    "github.com/saleamlakw/A2SV_backend_track/controllers"
 )
 
 func main() {

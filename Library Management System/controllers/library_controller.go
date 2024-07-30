@@ -3,8 +3,8 @@ package controllers
 import (
     "bufio"
     "fmt"
-    "example/LibraryManagmnetSystem/models"
-    "example/LibraryManagmnetSystem/services"
+    "github.com/saleamlakw/A2SV_backend_track/models"
+    "github.com/saleamlakw/A2SV_backend_track/services"
     "os"
     "strconv"
 )

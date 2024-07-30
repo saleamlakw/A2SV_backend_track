@@ -2,7 +2,7 @@ package services
 
 import (
 	"errors"
-	"example/LibraryManagmnetSystem/models"
+	"github.com/saleamlakw/A2SV_backend_track/models"
 	"fmt"
 )
 type LibraryManager interface{
