@@ -26,7 +26,8 @@ func RunLibrary() {
         fmt.Println("4. Return a book")
         fmt.Println("5. List all available books")
         fmt.Println("6. List all borrowed books by a member")
-        fmt.Println("7. Exit")
+        fmt.Println("7. Add Member")
+        fmt.Println("8. Exit")
         fmt.Print("Enter your choice: ")
 
         scanner.Scan()
@@ -46,6 +47,8 @@ func RunLibrary() {
         case "6":
             listBorrowedBooks(scanner)
         case "7":
+            addMember(scanner)
+        case "8":
             fmt.Println("Exiting the Library Management System.")
             return
         default:
@@ -76,6 +79,24 @@ func addBook(scanner *bufio.Scanner) {
 
     library.AddBook(book)
     fmt.Println("Book added successfully!")
+}
+
+func addMember(scanner *bufio.Scanner) {
+    fmt.Print("Enter member ID: ")
+    scanner.Scan()
+    id, _ := strconv.Atoi(scanner.Text())
+
+    fmt.Print("Enter member name: ")
+    scanner.Scan()
+    name := scanner.Text()
+
+    member := models.Member{
+        ID:     id,
+        Name:  name,
+    }
+
+    library.AddMember(member)
+    fmt.Println("member registored successfully!")
 }
 
 func removeBook(scanner *bufio.Scanner) {

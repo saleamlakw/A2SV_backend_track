@@ -12,6 +12,7 @@ type LibraryManager interface{
 	ReturnBook(bookID int, memberID int) error
 	ListAvailableBooks() []models.Book
 	ListBorrowedBooks(memberID int) ([]models.Book,error)
+	AddMember(member models.Member)
 }
 
 type Libray struct{
@@ -27,7 +28,10 @@ func NewLibrary() *Libray {
 
 func (l Libray)AddBook(book models.Book){
 	l.books[book.ID]=book
-	fmt.Println("----",l.books)
+
+}
+func (l Libray)AddMember(member models.Member){
+	l.members[member.ID]=member
 
 }
 
@@ -52,6 +56,9 @@ func (l Libray) BorrowBook(bookID int, memberID int) error{
 		if memberExists{
 			member.BorrowedBooks=append(member.BorrowedBooks,book)
 			book.Status="Borrowed"
+			l.members[memberID]=member
+			l.books[bookID]=book
+
 		}else{
 			return errors.New("member not found")
 		}
