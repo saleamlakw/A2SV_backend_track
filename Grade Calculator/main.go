@@ -17,6 +17,27 @@ func calcualteAverage(result map[string]float64,numberOfSubjects uint) float64{
 	return total/float64(numberOfSubjects)
 }
 
+//get grade 
+func  getGrade(value float64)string{
+	switch {
+	case value >= 90:
+		return "A+"
+	case value >= 85:
+		return "A"
+	case value >= 80:
+		return "B+"
+	case value >= 75:
+		return "B-"
+	case value >= 70:
+		return "B"
+	case value >= 60:
+		return "C"
+	case value >= 50:
+		return "D"
+	default:
+		return "F"
+	}
+}
 //accept and validate number of subjects
 func acceptNoOfSubjects()uint{
 	reader:=bufio.NewReader(os.Stdin)
@@ -49,6 +70,7 @@ func acceptGrade() float64{
 		}
 		return float64(grade)
 }
+
 }
 func main(){
 	var firstName string
@@ -91,7 +113,7 @@ func main(){
 	fmt.Printf("|%-10s | %5s |\n","Subject","Grade")
 	fmt.Println(strings.Repeat("_", 20))
 	for subject,grade := range result{
-		fmt.Printf("|%-10s | %5.2f |\n",subject,grade)
+		fmt.Printf("|%-10s | %5s |\n",subject,getGrade(grade))
 	}
 	
 	//print avearge
