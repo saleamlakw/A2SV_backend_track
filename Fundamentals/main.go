@@ -9,7 +9,7 @@ func WordFrequency(s string) map[string]int{
 	for ind,_ := range words{
 		var finalString string
 		for _,char :=range words[ind]{
-			if unicode.IsLetter(char){
+			if unicode.IsLetter(char)||unicode.IsDigit(char){ 
 				finalString+=strings.ToLower(string(char))
 			}
 		}
