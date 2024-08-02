@@ -3,9 +3,6 @@
 
 Welcome to the Task Management API, a RESTful API built using the Go Gin framework. This project provides endpoints for managing tasks, including creating, retrieving, updating, and deleting tasks.
 
-### Repository
-
-**GitHub Repository**: [Task Management API](https://github.com/saleamlakw/A2SV_backend_track.git)
 
 ### Table of Contents
 
