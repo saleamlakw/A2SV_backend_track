@@ -16,6 +16,7 @@ func GetTask(c *gin.Context){
 	tasks,err:=data.GetTask(context.TODO(),&db)
 	if err!=nil{
 		c.IndentedJSON(http.StatusInternalServerError,gin.H{"message":"failed to retrive tasks"})
+		return
 	}
 	c.IndentedJSON(http.StatusOK,tasks)
 }
@@ -34,6 +35,7 @@ func GetTaskById(c *gin.Context){
 	task,err:=data.GetTaskById(context.TODO(),id,&db)
 	if err!=nil{
 		c.IndentedJSON(http.StatusNotFound,gin.H{"message":"task not found"})
+		return
 	}
 	c.IndentedJSON(http.StatusOK,task)
 	
@@ -43,6 +45,7 @@ func DeleteTask(c *gin.Context){
 	id:=c.Param("id")
 	if err:=data.DeleteTask(context.TODO(),id,&db);err==nil{
 		c.IndentedJSON(http.StatusOK,gin.H{"message":"task deleted"})
+		return
 	}
 	c.IndentedJSON(http.StatusNotFound,gin.H{"message":"task not found"})
 }
