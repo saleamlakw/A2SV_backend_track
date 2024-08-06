@@ -135,3 +135,14 @@ func SignUp(c *gin.Context){
 	}
 	c.IndentedJSON(http.StatusCreated,createdUser)
 }
+func Login(c *gin.Context){
+	var user models.User
+	err:=c.BindJSON(&user)
+	if err!=nil{
+		c.IndentedJSON(http.StatusBadRequest,gin.H{"message":err.Error()})
+		return
+	}
+	userdb:=db.Collection("users")
+	token,_:=data.Login(context.TODO(),user,userdb)
+	c.IndentedJSON(http.StatusOK,token)
+}

@@ -33,8 +33,6 @@ func main(){
 	fmt.Println("Connected to MongoDB!")
 	router :=gin.Default()
 	routes.Route(router)
-	routes.AuthRoute(router)
-	routes.UserRoute(router)
 	port:=os.Getenv("PORT")
 	router.Run("localhost:"+port)
 	}

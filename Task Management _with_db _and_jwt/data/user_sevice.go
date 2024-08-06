@@ -5,10 +5,10 @@ import (
 	"fmt"
 	// "errors"
 	"log"
-	// "os"
-	// "time"
+	"os"
+	"time"
 
-	// jwt "github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
 	// "github.com/gin-gonic/gin"
 	"github.com/saleamlakw/TaskManager/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -34,16 +34,16 @@ func HashPassword(Password string)string{
 	}
 	return string(hashedPassword)
 }
-// func VerifyPassword(userPassword string ,providedPassword string)(bool,string){
-// 	msg:=""
-// 	check:=true
-// 	err:=bcrypt.CompareHashAndPassword([]byte(providedPassword),[]byte(userPassword))
-// 	if err!=nil{
-// 		msg="passowrd is incorrect"
-//         check=false
-// 	}
-// 	return check,msg
-
+func VerifyPassword(userPassword string ,providedPassword string)(bool,string){
+	msg:=""
+	check:=true
+	err:=bcrypt.CompareHashAndPassword([]byte(providedPassword),[]byte(userPassword))
+	if err!=nil{
+		msg="passowrd is incorrect"
+        check=false
+	}
+	return check,msg
+}
 // }
 // func CheckUserType(c *gin.Context,role string)error{
 // 	user_type:=c.GetString("user_type")
@@ -154,17 +154,26 @@ func CreateUser(ctx context.Context,newUser models.User,db *mongo.Collection)(mo
 
 //     return
 // }
-// func Login(ctx context.Context,user models.User,db *mongo.Collection)models.User{
-// 	var foundUser models.User
-// 	err:=db.FindOne(context.TODO(),bson.M{"email":user.Email}).Decode(&foundUser)
-// 	if err!=nil{
-// 		return models.User{}
-// 	}
-// 	passwordIsValid,_:=VerifyPassword(user.Password,foundUser.Password)
-// 	if !passwordIsValid{
-// 		return models.User{}
-// 	}
-// 	token,refreshToken,_:= GenerateAllTokens(foundUser.Email,foundUser.FirstName,foundUser.LastName,foundUser.User_type,foundUser.User_id) 
-// 	UpdateAllTokens(ctx,db,token,refreshToken,foundUser.User_id)
-// 	return foundUser
-// }
+func Login(ctx context.Context,user models.User,db *mongo.Collection)(string,models.User){
+	var foundUser models.User
+	err:=db.FindOne(context.TODO(),bson.M{"username":user.UserName}).Decode(&foundUser)
+	if err!=nil{
+		return "",models.User{}
+	}
+	passwordIsValid,_:=VerifyPassword(user.Password,foundUser.Password)
+	if !passwordIsValid{
+		return "",models.User{}
+	}
+	claims := jwt.MapClaims{
+        "userid":   foundUser.ID,
+        "username": foundUser.UserName,
+        "role":     foundUser.Role,
+        "exp":      time.Now().Add(24 * time.Hour).Unix(),
+    }
+	var SecretKey = os.Getenv("SECRET_KEY")
+	token,err:= jwt.NewWithClaims(jwt.SigningMethodHS256,claims).SignedString([]byte(SecretKey))
+	if err!=nil{
+		return "",models.User{}
+	}
+	return token,foundUser
+}

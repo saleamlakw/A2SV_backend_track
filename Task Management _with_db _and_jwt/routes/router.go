@@ -11,4 +11,10 @@ func Route(router *gin.Engine) {
 	router.POST("/tasks", controllers.PostTask)
 	router.DELETE("/tasks/:id", controllers.DeleteTask)
 	router.PUT("/tasks/:id", controllers.UpdateTask)
+
+	router.POST("/user/signup",controllers.SignUp)
+	router.POST("/user/login",controllers.Login)
+
+	router.GET("/users",controllers.GetUsers)
+	router.GET("/users/:id",controllers.Getuser)
 }
