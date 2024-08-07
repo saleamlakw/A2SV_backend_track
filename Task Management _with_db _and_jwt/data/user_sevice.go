@@ -111,10 +111,10 @@ func CreateUser(ctx context.Context,newUser models.User,db *mongo.Collection)(mo
 	newUser.ID=primitive.NewObjectID().Hex()
 	newUser.Password=string(hashedPassword)
 	if result,_:=db.EstimatedDocumentCount(ctx);result==0{
-		fmt.Println("+++",result)
+		// fmt.Println("+++",result)
 		newUser.Role="admin"
 	}else{
-		fmt.Println("+++",result)
+		// fmt.Println("+++",result)
 		newUser.Role="user"
 	}
 	// newUser.User_id=newUser.ID.Hex()
