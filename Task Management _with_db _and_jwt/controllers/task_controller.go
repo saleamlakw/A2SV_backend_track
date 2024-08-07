@@ -55,13 +55,14 @@ func GetTask(c *gin.Context) {
 
 func PostTask(c *gin.Context) {
 	tasksdb := db.Collection("tasks")
+	usersdb:=db.Collection("users")
 	var newTask models.Task
 	if err := c.BindJSON(&newTask); err != nil {
 		return
 	}
-	createdTask, err := data.CreateTask(context.TODO(), newTask, tasksdb)
+	createdTask, err := data.CreateTask(context.TODO(), newTask, tasksdb,usersdb)
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "task not created"})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 	c.IndentedJSON(http.StatusCreated, createdTask)
@@ -139,8 +140,40 @@ func UpdateTask(c *gin.Context) {
 	}
 	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "task not found"})
 }
-func Getuser(c *gin.Context) {
+func GetuserById(c *gin.Context) {
+	role, exists := c.Get("role")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "role not found"})
+		c.Abort()
+		return
+	}
+
+	urole, ok := role.(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid role"})
+		c.Abort()
+		return
+	}
+
+	userid, exists := c.Get("userid")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "userid not found"})
+		c.Abort()
+		return
+	}
+
+	uid, ok := userid.(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid userid"})
+		c.Abort()
+		return
+	}
 	user_id := c.Param("id")
+	if urole=="user" &&user_id!=uid{
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "An authorized access"})
+		c.Abort()
+		return
+	}
 	usersdb := db.Collection("users")
 	user, err := data.GetUserById(context.TODO(), user_id, usersdb)
 	if err != nil {
@@ -150,6 +183,40 @@ func Getuser(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, user)
 }
 func GetUsers(c *gin.Context) {
+	role, exists := c.Get("role")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "role not found"})
+		c.Abort()
+		return
+	}
+
+	urole, ok := role.(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid role"})
+		c.Abort()
+		return
+	}
+
+	userid, exists := c.Get("userid")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "userid not found"})
+		c.Abort()
+		return
+	}
+
+	uid, ok := userid.(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid userid"})
+		c.Abort()
+		return
+	}
+	usersdb := db.Collection("users")
+	users, err := data.GetUsers(context.TODO(), usersdb, urole, uid)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "failed to retrive users"})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, users)
 
 }
 
@@ -192,14 +259,30 @@ func Login(c *gin.Context) {
 		return
 	}
 	userdb := db.Collection("users")
-	token, _ := data.Login(context.TODO(), user, userdb)
+	token, err := data.Login(context.TODO(), user, userdb)
+	if err!=nil{
+		c.IndentedJSON(http.StatusUnauthorized,gin.H{"error":err.Error()})
+	}
 	c.IndentedJSON(http.StatusOK, token)
 }
 
 func PromoteUserToAdmin(c *gin.Context) {
-	id := c.Param("id")
 	userdb := db.Collection("users")
-	err := data.PromoteUserToAdmin(context.TODO(), userdb, id)
+	id := c.Param("id")
+	user,err:=data.GetUserById(context.TODO(), id, userdb)
+	if err != nil {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "user not found"})
+		return
+	}
+	if user.Role=="admin"{
+		c.JSON(http.StatusBadRequest, gin.H{"error": "the user is alrady an admin"})
+		c.Abort()
+		return
+	}
+
+	
+	
+	err = data.PromoteUserToAdmin(context.TODO(), userdb, id)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 	}

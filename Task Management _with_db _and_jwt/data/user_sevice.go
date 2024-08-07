@@ -20,7 +20,6 @@ import (
 )
 func AccountExists(ctx context.Context,usersdb *mongo.Collection,username string)(bool,error){
 	count,err:=usersdb.CountDocuments(ctx,bson.M{"username":username})
-	fmt.Println("count---",count)
 	if err!=nil{
 		return false,err
 	}
@@ -44,66 +43,11 @@ func VerifyPassword(userPassword string ,providedPassword string)(bool,string){
 	}
 	return check,msg
 }
-// }
-// func CheckUserType(c *gin.Context,role string)error{
-// 	user_type:=c.GetString("user_type")
-// 	if user_type!=role{
-// 		return errors.New("unauthorized to access this resource")
-// 	}
-// 	return nil
-// }
-// func MatchUserTypeToUid(c *gin.Context,userid string)error{
-// 	user_type:=c.GetString("user_type")
-// 	uid:=c.GetString("uid")
-// 	if user_type=="USER" && uid!=userid{
-// 		return errors.New("unauthorized to access this resource")
-// 	}
-// 	err:=CheckUserType(c,user_type)
-// 	return err 
-// }
 func GetUserById(ctx context.Context,id string ,db *mongo.Collection)(models.User,error){
 	var user models.User
 	err:=db.FindOne(ctx,bson.M{"id":id}).Decode(&user) 
 	return user,err
 }
-// type SignedDetails struct{
-// 	Email      string
-// 	First_name string
-// 	Last_name  string 
-// 	Uid        string
-// 	User_type  string 
-// 	jwt.StandardClaims   
-// }
-// var SecretKey = os.Getenv("SECRET_KEY")
-
-// func GenerateAllTokens(email string,fname string ,lname string ,user_type string,user_id string)(string,string,error){
-// 	clamis:=&SignedDetails{
-// 		Email: email,
-// 		First_name: fname,
-// 		Last_name: lname,
-// 		Uid: user_id,
-// 		User_type: user_type,
-// 		StandardClaims: jwt.StandardClaims{
-// 			ExpiresAt : time.Now().Local().Add(time.Hour * time.Duration(24)).Unix(),
-// 		},
-// 	}
-// 	refreshClaims := &SignedDetails{
-// 		StandardClaims: jwt.StandardClaims{
-// 			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(168)).Unix(),
-// 		},
-// 	}
-// 	token,err:= jwt.NewWithClaims(jwt.SigningMethodHS256,clamis).SignedString([]byte(SecretKey))
-// 	if err != nil{
-// 		log.Panic(err)
-// 		return "","",err
-// 	}
-// 	refreshToken,err:= jwt.NewWithClaims(jwt.SigningMethodHS256,refreshClaims).SignedString([]byte(SecretKey))
-// 	if err != nil{
-// 		log.Panic(err)
-// 		return "","",err
-// 	}
-// 	return token,refreshToken,err
-// }
 
 func CreateUser(ctx context.Context,newUser models.User,db *mongo.Collection)(models.User,error){
 	hashedPassword:=HashPassword(newUser.Password)
@@ -111,58 +55,24 @@ func CreateUser(ctx context.Context,newUser models.User,db *mongo.Collection)(mo
 	newUser.ID=primitive.NewObjectID().Hex()
 	newUser.Password=string(hashedPassword)
 	if result,_:=db.EstimatedDocumentCount(ctx);result==0{
-		// fmt.Println("+++",result)
 		newUser.Role="admin"
 	}else{
-		// fmt.Println("+++",result)
 		newUser.Role="user"
 	}
-	// newUser.User_id=newUser.ID.Hex()
-	// token,refreshToken,_:= GenerateAllTokens(newUser.Email,newUser.FirstName,newUser.LastName,newUser.User_type,newUser.User_id) 
-	// newUser.Token=token
-	// newUser.Refresh_token=refreshToken
 	_,err:=db.InsertOne(ctx,newUser)
 	return newUser,err
 	
 }
-// func UpdateAllTokens(ctx context.Context,db *mongo.Collection,signedToken string, signedRefreshToken string, userId string) {
-//     var updateObj primitive.D
 
-//     updateObj = append(updateObj, bson.E{"token", signedToken})
-//     updateObj = append(updateObj, bson.E{"refresh_token", signedRefreshToken})
-
-
-//     upsert := true
-//     filter := bson.M{"user_id": userId}
-//     opt := options.UpdateOptions{
-//         Upsert: &upsert,
-//     }
-
-//     _, err := db.UpdateOne(
-//         ctx,
-//         filter,
-//         bson.D{
-//             {"$set", updateObj},
-//         },
-//         &opt,
-//     )
-
-//     if err != nil {
-//         log.Panic(err)
-//         return
-//     }
-
-//     return
-// }
-func Login(ctx context.Context,user models.User,db *mongo.Collection)(string,models.User){
+func Login(ctx context.Context,user models.User,db *mongo.Collection)(string,error){
 	var foundUser models.User
 	err:=db.FindOne(context.TODO(),bson.M{"username":user.UserName}).Decode(&foundUser)
 	if err!=nil{
-		return "",models.User{}
+		return "",fmt.Errorf("user not found:%v",err)
 	}
 	passwordIsValid,_:=VerifyPassword(user.Password,foundUser.Password)
 	if !passwordIsValid{
-		return "",models.User{}
+		return "",fmt.Errorf("invalid password : %v",err)
 	}
 	claims := jwt.MapClaims{
         "userid":   foundUser.ID,
@@ -173,7 +83,44 @@ func Login(ctx context.Context,user models.User,db *mongo.Collection)(string,mod
 	var SecretKey = os.Getenv("SECRET_KEY")
 	token,err:= jwt.NewWithClaims(jwt.SigningMethodHS256,claims).SignedString([]byte(SecretKey))
 	if err!=nil{
-		return "",models.User{}
+		return "",fmt.Errorf("error generating token : %v",err)
 	}
-	return token,foundUser
+	return token,nil
+}
+func GetUsers(ctx context.Context, db *mongo.Collection, role string, uid string) (*[]models.User, error) {
+	var filter interface{}
+	users := []models.User{}
+	if role == "admin" {
+		filter = bson.D{{}}
+	} else {
+		filter = bson.M{"user_id": uid}
+	}
+	cursor, err := db.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	for cursor.Next(ctx) {
+		var user models.User
+		err := cursor.Decode(&user)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+
+	}
+	cursor.Close(ctx)
+	return &users, nil
+
+}
+func PromoteUserToAdmin(ctx context.Context, db *mongo.Collection, id string) error {
+	query := bson.M{"id": id}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "role", Value: "admin"},
+	}},
+	}
+	_,err := db.UpdateOne(ctx, query, update)
+	if err != nil {
+		return err
+	}
+	return nil
 }

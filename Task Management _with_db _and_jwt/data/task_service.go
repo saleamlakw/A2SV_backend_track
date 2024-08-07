@@ -2,11 +2,13 @@ package data
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/saleamlakw/TaskManager/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func GetTask(ctx context.Context, db *mongo.Collection, role string, uid string) (*[]models.Task, error) {
@@ -34,9 +36,13 @@ func GetTask(ctx context.Context, db *mongo.Collection, role string, uid string)
 	return &tasks, nil
 
 }
-func CreateTask(ctx context.Context, newTask models.Task, db *mongo.Collection) (models.Task, error) {
+func CreateTask(ctx context.Context, newTask models.Task, taskdb *mongo.Collection, userdb *mongo.Collection) (models.Task, error) {
+	count, _ := userdb.CountDocuments(ctx, bson.M{"id": newTask.User_id})
+	if count == 0 {
+		return models.Task{}, fmt.Errorf("user not found")
+	}
 	newTask.ID = primitive.NewObjectID().Hex()
-	_, err := db.InsertOne(ctx, newTask)
+	_, err := taskdb.InsertOne(ctx, newTask)
 	return newTask, err
 }
 func IsUserAssignedToTask(ctx context.Context, id string, db *mongo.Collection, role string, uid string) bool {
@@ -73,21 +79,10 @@ func UpdateTask(ctx context.Context, updatedTask models.Task, id string, db *mon
 	}},
 	}
 	var updatedResult models.Task
-	err := db.FindOneAndUpdate(ctx, query, update).Decode(&updatedResult)
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+	err := db.FindOneAndUpdate(ctx, query, update, opts).Decode(&updatedResult)
 	if err != nil {
 		return models.Task{}, err
 	}
 	return updatedResult, nil
-}
-func PromoteUserToAdmin(ctx context.Context, db *mongo.Collection, id string) error {
-	query := bson.M{"id": id}
-	update := bson.D{{Key: "$set", Value: bson.D{
-		{Key: "role", Value: "admin"},
-	}},
-	}
-	_,err := db.UpdateOne(ctx, query, update)
-	if err != nil {
-		return err
-	}
-	return nil
 }

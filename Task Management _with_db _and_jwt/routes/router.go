@@ -14,10 +14,10 @@ func Route(router *gin.Engine) {
 	r.DELETE("/tasks/:id",middleware.IsAdminMiddleware,controllers.DeleteTask)
 	r.PUT("/tasks/:id",middleware.IsAdminMiddleware,controllers.UpdateTask)
 
-	router.POST("/user/signup",controllers.SignUp)
-	router.POST("/user/login",controllers.Login)
+	router.POST("/users/signup",controllers.SignUp)
+	router.POST("/users/login",controllers.Login)
 
 	r.GET("/users",middleware.IsAdminMiddleware,controllers.GetUsers)
-	r.GET("/users/:id",middleware.IsAdminMiddleware,controllers.Getuser)
+	r.GET("/users/:id",controllers.GetuserById)
 	r.POST("/promote/:id",middleware.IsAdminMiddleware,controllers.PromoteUserToAdmin)
 }
