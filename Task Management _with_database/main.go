@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/saleamlakw/TaskManagement/data"
 	"github.com/saleamlakw/TaskManagement/router"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -25,9 +27,14 @@ func main(){
 	}
 	
 	service:=data.NewTaskService(client)
-	
+
 	fmt.Println("Connected to MongoDB!")
 	ro :=gin.Default()
 	router.Route(ro,service)
-	ro.Run("localhost:8080")
+	err=godotenv.Load(".env")
+	if err!=nil{
+		log.Fatal("Error loading .env file")
+	}
+	mongo_url:=os.Getenv("MONGO_URL")
+	ro.Run(mongo_url)
 	}
