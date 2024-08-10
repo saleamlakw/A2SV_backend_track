@@ -3,7 +3,9 @@ package controllers
 import (
 	"context"
 	"net/http"
+
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/saleamlakw/TaskManagement/data"
 	"github.com/saleamlakw/TaskManagement/models"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -27,6 +29,15 @@ func PostTask(c *gin.Context){
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
 		return 
 	}
+
+	validate := validator.New()
+	validateErr := validate.Struct(newTask)
+	if validateErr != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": validateErr.Error()})
+		return
+	}
+
+
 	data.CreateTask(context.TODO(),newTask,&db)
 	c.IndentedJSON(http.StatusCreated,newTask)
 }

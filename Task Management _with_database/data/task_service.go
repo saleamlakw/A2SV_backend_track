@@ -5,6 +5,7 @@ import (
 
 	"github.com/saleamlakw/TaskManagement/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -28,6 +29,7 @@ func GetTask(ctx context.Context,db *mongo.Collection)  (*[]models.Task,error){
 
 }
 func CreateTask(ctx context.Context,newTask models.Task,db *mongo.Collection) error{
+	newTask.ID = primitive.NewObjectID().Hex()
 	_,err:=db.InsertOne(ctx,newTask)
 	return err
 }
