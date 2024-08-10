@@ -30,18 +30,18 @@ Before setting up the project, ensure you have the following installed on your m
 
 First, clone the repository to your local machine:
 
-\`\`\`sh
+```sh
 git clone https://github.com/saleamlakw/A2SV_backend_track.git
 cd A2SV_backend_track/Task Management
-\`\`\`
+```
 
 ### 2. Install Dependencies
 
 Install the necessary Go packages:
 
-\`\`\`sh
+```sh
 go mod tidy
-\`\`\`
+```
 
 This command will download all dependencies specified in the `go.mod` file.
 
@@ -53,9 +53,9 @@ Ensure MongoDB is running on your local machine or accessible remotely. By defau
 
 To start the API server, use the following command:
 
-\`\`\`sh
+```sh
 go run main.go
-\`\`\`
+```
 
 The server will start on `http://localhost:8080` by default. If you've set a different port using environment variables, it will use that port instead.
 
