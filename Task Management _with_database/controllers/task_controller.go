@@ -8,14 +8,17 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/saleamlakw/TaskManagement/data"
 	"github.com/saleamlakw/TaskManagement/models"
-	"go.mongodb.org/mongo-driver/mongo"
 )
-var db mongo.Collection
-func Init(database *mongo.Database){
-	db=*database.Collection("tasks")
+type taskController struct{
+	service data.TaskService
 }
-func GetTask(c *gin.Context){
-	tasks,err:=data.GetTask(context.TODO(),&db)
+func NewTaskController(service data.TaskService)*taskController{
+	return &taskController{
+		service: service,
+	}
+}
+func (tc *taskController)GetTask(c *gin.Context){
+	tasks,err:=tc.service.GetTask(context.TODO())
 	if err!=nil{
 		c.IndentedJSON(http.StatusInternalServerError,gin.H{"message":"failed to retrive tasks"})
 		return
@@ -23,7 +26,7 @@ func GetTask(c *gin.Context){
 	c.IndentedJSON(http.StatusOK,tasks)
 }
 
-func PostTask(c *gin.Context){
+func (tc *taskController)PostTask(c *gin.Context){
 	var newTask models.Task
 	if err:= c.BindJSON(&newTask);err!=nil{
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
@@ -38,13 +41,17 @@ func PostTask(c *gin.Context){
 	}
 
 
-	data.CreateTask(context.TODO(),newTask,&db)
-	c.IndentedJSON(http.StatusCreated,newTask)
+	createdTask,err:=tc.service.CreateTask(context.TODO(),newTask)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	c.IndentedJSON(http.StatusCreated,createdTask)
 }
 
-func GetTaskById(c *gin.Context){
+func (tc *taskController)GetTaskById(c *gin.Context){
 	id:=c.Param("id")
-	task,err:=data.GetTaskById(context.TODO(),id,&db)
+	task,err:=tc.service.GetTaskById(context.TODO(),id)
 	if err!=nil{
 		c.IndentedJSON(http.StatusNotFound,gin.H{"message":"task not found"})
 		return
@@ -53,22 +60,22 @@ func GetTaskById(c *gin.Context){
 	
 }
 
-func DeleteTask(c *gin.Context){
+func (tc *taskController)DeleteTask(c *gin.Context){
 	id:=c.Param("id")
-	if err:=data.DeleteTask(context.TODO(),id,&db);err==nil{
-		c.IndentedJSON(http.StatusOK,gin.H{"message":"task deleted"})
+	if err:=tc.service.DeleteTask(context.TODO(),id);err==nil{
+		c.IndentedJSON(http.StatusOK,gin.H{"message":"task deleted successfuly"})
 		return
 	}
 	c.IndentedJSON(http.StatusNotFound,gin.H{"message":"task not found"})
 }
 
-func UpdateTask(c *gin.Context){
+func (tc *taskController)UpdateTask(c *gin.Context){
 	id:=c.Param("id")
 	var updatedTask models.Task
 	if err:=c.BindJSON(&updatedTask);err!=nil{
 		return
 	}
-	task,err:=data.UpdateTask(context.TODO(),updatedTask,id,&db)
+	task,err:=tc.service.UpdateTask(context.TODO(),updatedTask,id)
 	if err==nil{
 		c.IndentedJSON(http.StatusOK,task)
 		return 

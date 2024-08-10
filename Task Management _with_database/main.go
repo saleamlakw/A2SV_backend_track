@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/saleamlakw/TaskManagement/controllers"
+	"github.com/saleamlakw/TaskManagement/data"
 	"github.com/saleamlakw/TaskManagement/router"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -23,9 +23,11 @@ func main(){
 	if err != nil {
 		log.Fatal(err)
 	}
-	controllers.Init(client.Database("taskmanager"))
+	
+	service:=data.NewTaskService(client)
+	
 	fmt.Println("Connected to MongoDB!")
 	ro :=gin.Default()
-	router.Route(ro)
+	router.Route(ro,service)
 	ro.Run("localhost:8080")
 	}

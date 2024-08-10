@@ -3,11 +3,13 @@ package router
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/saleamlakw/TaskManagement/controllers"
+	"github.com/saleamlakw/TaskManagement/data"
 )
-func Route(router *gin.Engine){
-	router.GET("/tasks",controllers.GetTask)
-	router.GET("/tasks/:id",controllers.GetTaskById)
-	router.POST("/tasks/",controllers.PostTask)
-	router.DELETE("/tasks/:id",controllers.DeleteTask)
-	router.PUT("/tasks/:id",controllers.UpdateTask)
+func Route(router *gin.Engine,service data.TaskService){
+	tc:=controllers.NewTaskController(service)
+	router.GET("/tasks",tc.GetTask)
+	router.GET("/tasks/:id",tc.GetTaskById)
+	router.POST("/tasks/",tc.PostTask)
+	router.DELETE("/tasks/:id",tc.DeleteTask)
+	router.PUT("/tasks/:id",tc.UpdateTask)
 }
