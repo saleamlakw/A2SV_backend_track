@@ -6,6 +6,7 @@ import (
 	"github.com/saleamlakw/TaskManagement/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 func GetTask(ctx context.Context,db *mongo.Collection)  (*[]models.Task,error){
 	tasks:=[]models.Task{} 
@@ -54,9 +55,11 @@ func UpdateTask(ctx context.Context,updatedTask models.Task,id string,db *mongo.
 		{Key: "status", Value: updatedTask.Status},
 	}},
 }
-	_,err:=db.UpdateOne(ctx,query,update)
-	if err!= nil{
-		return models.Task{},err
+	var updatedResult models.Task
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+	err := db.FindOneAndUpdate(ctx, query, update, opts).Decode(&updatedResult)
+	if err != nil {
+		return models.Task{}, err
 	}
-	return updatedTask,nil
+	return updatedResult, nil
 	}

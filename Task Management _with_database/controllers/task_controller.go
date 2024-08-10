@@ -24,6 +24,7 @@ func GetTask(c *gin.Context){
 func PostTask(c *gin.Context){
 	var newTask models.Task
 	if err:= c.BindJSON(&newTask);err!=nil{
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
 		return 
 	}
 	data.CreateTask(context.TODO(),newTask,&db)
